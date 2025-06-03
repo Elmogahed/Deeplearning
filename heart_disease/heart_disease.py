@@ -34,10 +34,6 @@ for i, col in enumerate(cols):
 plt.tight_layout()
 plt.show()
 
-
-
-
-
 # Handling null values
 df['trestbps'] = df['trestbps'].fillna(df['trestbps'].median())
 df['chol']  = df['chol'].fillna(df['chol'].median())
@@ -140,7 +136,7 @@ import tensorflow as tf
 np.random.seed(42)
 tf.random.set_seed(42)
 
-# 
+
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
