@@ -98,7 +98,7 @@ history = model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=100
 
 ##  تقييم النموذج
 
-حساب الدقة والمقاييس المختلفة مع رسم مصفوفة الالتباس.
+حساب الدقة والمقاييس المختلفة مع رسم مصفوفة الارتباك.
 
 ```python
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
