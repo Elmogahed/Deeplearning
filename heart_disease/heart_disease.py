@@ -11,6 +11,7 @@ print(df.duplicated().sum())
 print(df.isnull().sum().sum())
 print(df.isnull().sum())
 
+# Display distribution for numeric columns
 cols = ['trestbps', 'chol', 'thalch', 'oldpeak']
 fig , axes = plt.subplots(2, 2 ,figsize=(12,8))
 axes = axes.flatten()
@@ -54,7 +55,7 @@ df['thal'] = df['thal'].fillna(df['thal'].mode()[0])
 print(df.isnull().sum())
 print(df.info())
 
-# Data balancing
+#  Balance data to prevent bias
 value_counts = df['num'].value_counts()
 print(value_counts)
 labels = value_counts.index
@@ -84,7 +85,7 @@ plt.pie(counts, labels= labels, autopct='%1.1f%%')
 plt.show()
 
 
-
+# Prepare input and output data and delete unimportant columns, target column
 x = df.drop(columns=['id', 'num'])
 print(x)
 y = df['num']
@@ -92,6 +93,7 @@ print(y)
 
 print(x['sex'])
 
+# Encoding categorical columns because the model only accepts numeric columns
 from sklearn.preprocessing import LabelEncoder
 labelencoder_gender = LabelEncoder()
 x['sex'] = labelencoder_gender.fit_transform(x['sex'])
@@ -113,7 +115,7 @@ ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(drop='first'), mu
 x = ct.fit_transform(x)
 print(x[0])
 
-
+# Splitting the data into training, validation, and testing sets to check for overfitting or not
 from sklearn.model_selection import train_test_split
 x_train , x_val_and_test , y_train, y_val_and_test = train_test_split(x,y, test_size =0.30, random_state=42)
 x_val, x_test , y_val , y_test = train_test_split(x_val_and_test, y_val_and_test, test_size=0.50, random_state=42)
@@ -124,6 +126,7 @@ print('Y_train.shape:', y_train.shape)
 print('Y_val.shape  :', y_val.shape)
 print('Y_test.shape :', y_test.shape)
 
+# Scaling the data using StandardScaler because there are outliers and extreme values, as we saw in the plot, so we apply scaling to the data.
 from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 x_train = sc.fit_transform(x_train)
@@ -132,29 +135,46 @@ x_test = sc.transform(x_test)
 
 print(x_train)
 
+# Random seed setting (or fixing the random state)
 import tensorflow as tf
 np.random.seed(42)
 tf.random.set_seed(42)
 
+# 
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras import regularizers
 
-model = Sequential()
+model = Sequential()  # Initialize a sequential model
 
-input_dim = len(x_train[0])
-model.add(Dense(32, activation='relu', input_dim= input_dim , kernel_regularizer=regularizers.l2(0.00001)))
-model.add(Dropout(0.4)) 
+input_dim = len(x_train[0])  # Number of input features based on training data
+
+# Add first Dense layer with 32 units, ReLU activation, and L2 regularization to reduce overfitting
+model.add(Dense(32, activation='relu', input_dim=input_dim, kernel_regularizer=regularizers.l2(0.00001)))
+
+model.add(Dropout(0.4))  # Apply Dropout with 40% rate to prevent overfitting
+
+# Add second Dense layer with 16 units, ReLU activation, and L2 regularization
 model.add(Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.00001)))
-model.add(Dropout(0.4)) 
+
+model.add(Dropout(0.4))  # Apply Dropout again with 40% rate
+
+# Add third Dense layer with 8 units, ReLU activation, and L2 regularization
 model.add(Dense(8, activation='relu', kernel_regularizer=regularizers.l2(0.00001)))
+
+# Add output layer with 1 unit and sigmoid activation for binary classification
 model.add(Dense(1, activation='sigmoid'))
 
+# Compile the model using SGD optimizer, binary crossentropy loss, and accuracy metric
 model.compile(optimizer='sgd', loss='binary_crossentropy', metrics=['accuracy'])
-print(model.summary())
 
-history =  model.fit(x_train, y_train, batch_size=20, epochs=100, validation_data=(x_val, y_val))
+print(model.summary())  # Print the model architecture summary
+
+# Train the model on training data, validate on validation data for 100 epochs with batch size 20
+history = model.fit(x_train, y_train, batch_size=20, epochs=100, validation_data=(x_val, y_val))
+
+# Plot training and validation accuracy and loss over epochs to evaluate model performance and check for overfitting
 plt.figure(figsize=(12,5))
 plt.subplot(1,2,1)
 plt.plot(history.history['accuracy'], label='Train Accuracy')
@@ -177,7 +197,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-
+# Evaluate the model on test data and calculate key classification metrics
 evaluation = model.evaluate(x_test, y_test)
 
 print("Loss:", evaluation[0])
@@ -211,6 +231,7 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
+# Save the model for later use.
 model.save('heart_disease.keras')
 from joblib import dump
 
@@ -218,6 +239,7 @@ dump(labelencoder_gender, 'heart_disease_label.pkl')
 dump(ct, 'heart_disease_column_transformers.pkl')
 dump(sc,'heart_disease_standard_scaler.pkl')
 
+# test for the model
 # new_patient = np.array([[70, 'Male', 'Cleveland', 'asymptomatic', 160, 286,  False, 'lv hypertrophy' , 108, True, 1.5, 'flat', 3, 'normal']])
 from joblib import load
 labelencoder_gender_loaded = load('heart_disease_label.pkl')
