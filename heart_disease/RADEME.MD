@@ -2,32 +2,13 @@
 يهدف هذا المشروع إلى بناء نموذج تنبؤي لاكتشاف وجود مرض في القلب اعتمادًا على بيانات طبية من مجموعة بيانات UCI. يشمل المشروع مراحل المعالجة المسبقة للبيانات، تحليلها، تدريب النموذج، حفظ النموذج والأدوات، واختبار التنبؤ على بيانات جديدة.
 # 🫀 مشروع التنبؤ بأمراض القلب باستخدام الشبكات العصبية
 
-يهدف هذا المشروع إلى بناء نموذج ذكي باستخدام الشبكات العصبية (Neural Networks) لتشخيص احتمالية الإصابة بأمراض القلب، بالاعتماد على بيانات طبية حقيقية.
-
----
-
-## ✅ المتطلبات (Requirements)
+## ✅ المتطلبات
 
 ```bash
 pip install pandas numpy matplotlib seaborn scikit-learn keras tensorflow imbalanced-learn joblib
-🧾 محتويات المشروع
-قراءة ومعالجة البيانات
+🧾 قراءة البيانات واستكشافها
+نقوم بقراءة الملف، عرض أول خمس صفوف، معرفة أنواع البيانات، وعدد القيم المكررة أو المفقودة.
 
-تحليل استكشافي بصري (EDA)
-
-تنظيف البيانات والتعامل مع القيم المفقودة
-
-موازنة البيانات (Data Balancing)
-
-تجهيز البيانات للنموذج (Encoding + Scaling)
-
-بناء وتدريب نموذج الشبكة العصبية
-
-تقييم النموذج
-
-حفظ النموذج وتجهيزه للتنبؤ بمريض جديد
-
-🗂️ 1. قراءة البيانات واستكشافها
 python
 نسخ
 تحرير
@@ -36,146 +17,111 @@ print(df.head())
 print(df.info())
 print(df.duplicated().sum())
 print(df.isnull().sum())
-الشرح
+📊 التحليل الاستكشافي البصري
+رسم التوزيع والبوكس بلوت لاكتشاف القيم الشاذة.
 
-يتم تحميل البيانات الطبية.
-
-عرض أول 5 صفوف للتأكد من صحتها.
-
-عرض معلومات الأعمدة وأنواعها.
-
-التحقق من وجود صفوف مكررة أو بيانات ناقصة.
-
-📊 2. التحليل الاستكشافي البصري (EDA)
 python
 نسخ
 تحرير
 sns.histplot(df['chol'], kde=True)
 sns.boxplot(x=df['thalch'])
-الشرح
+🧼 تنظيف البيانات
+معالجة القيم المفقودة بالأكثر شيوعًا أو الوسيط.
 
-يتم رسم هيستوغرام (Histogram) لعرض توزيع القيم مثل الكوليسترول.
-
-استخدام Boxplot للكشف عن القيم الشاذة (Outliers).
-
-🧼 3. تنظيف البيانات والتعامل مع القيم المفقودة
 python
 نسخ
 تحرير
 df['chol'] = df['chol'].fillna(df['chol'].median())
 df['thal'] = df['thal'].fillna(df['thal'].mode()[0])
-الشرح
+⚖️ موازنة البيانات
+استخدام oversampling لزيادة العينات الإيجابية أو السلبية.
 
-القيم الرقمية الناقصة يتم ملؤها بالـ وسيط (Median).
-
-القيم النصية أو الفئوية يتم ملؤها بالـ وضع (Mode).
-
-⚖️ 4. موازنة البيانات (Class Balancing)
 python
 نسخ
 تحرير
 from imblearn.over_sampling import RandomOverSampler
-
 ros = RandomOverSampler()
 X_resampled, y_resampled = ros.fit_resample(X, y)
-الشرح
+🔧 تجهيز البيانات
+نقوم بتحويل القيم الفئوية والرقمية وتوحيد القياسات.
 
-إذا كانت بيانات المرضى غير متوازنة (عدد المرضى أقل من غير المرضى)، يتم استخدام RandomOverSampler لتوليد بيانات صناعية لموازنة الفئات.
-
-🧠 5. تجهيز البيانات (Encoding + Scaling)
 python
 نسخ
 تحرير
 from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
-الشرح
+🧠 بناء نموذج الشبكة العصبية
+هيكل النموذج يحتوي على 3 طبقات مخفية وواحدة إخراجية.
 
-LabelEncoder: لتحويل الجنس من Male/Female إلى أرقام.
-
-OneHotEncoder: لتحويل الأعمدة الفئوية مثل نوع الألم الصدري إلى متغيرات رقمية.
-
-StandardScaler: لتوحيد القيم العددية لتكون على نفس المقياس.
-
-🏗️ 6. بناء نموذج الشبكة العصبية (Neural Network)
 python
 نسخ
 تحرير
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+
 model = Sequential()
 model.add(Dense(32, activation='relu', input_dim=input_dim))
 model.add(Dropout(0.4))
 model.add(Dense(16, activation='relu'))
 model.add(Dense(8, activation='relu'))
 model.add(Dense(1, activation='sigmoid'))
-الشرح
+🏋️ تدريب النموذج
+تجميع النموذج باستخدام خوارزمية SGD وتدريبه لمدة 100 تكرار.
 
-شبكة عصبية مكونة من 3 طبقات مخفية (Hidden Layers).
-
-كل طبقة تستخدم تفعيل ReLU، والطبقة النهائية تستخدم Sigmoid (للتصنيف الثنائي).
-
-Dropout لتجنب overfitting.
-
-L2 Regularization لتقوية التعميم.
-
-🏋️ 7. تدريب النموذج
 python
 نسخ
 تحرير
 model.compile(optimizer='sgd', loss='binary_crossentropy', metrics=['accuracy'])
 history = model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=100)
-الشرح
+📈 تقييم النموذج
+حساب الدقة والمقاييس المختلفة مع رسم مصفوفة الالتباس.
 
-نستخدم SGD كـ Optimizer.
-
-دالة الفقد binary_crossentropy مناسبة لتصنيف ثنائي.
-
-نعرض دقة التدريب ودقة التحقق خلال 100 تكرار (Epochs).
-
-📈 8. تقييم النموذج
 python
 نسخ
 تحرير
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import numpy as np
+
 y_pred = model.predict(x_test)
-print(accuracy_score(y_test, y_pred_binary))
-print(precision_score(y_test, y_pred_binary))
-الشرح
+y_pred_binary = np.round(y_pred)
 
-بعد التنبؤ، نحسب المقاييس المهمة:
+print("Accuracy:", accuracy_score(y_test, y_pred_binary))
+print("Precision:", precision_score(y_test, y_pred_binary))
+print("Recall:", recall_score(y_test, y_pred_binary))
+print("F1 Score:", f1_score(y_test, y_pred_binary))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_binary))
+💾 حفظ النموذج والـ Encoders
+نحفظ النموذج والـ transformers للاستخدام لاحقًا في التنبؤ.
 
-الدقة (Accuracy)
-
-الدقة الإيجابية (Precision)
-
-الاسترجاع (Recall)
-
-متوسط F1 Score
-
-نرسم مصفوفة الالتباس (Confusion Matrix).
-
-💾 9. حفظ النموذج وتجهيز التنبؤات الجديدة
 python
 نسخ
 تحرير
+from joblib import dump
+
 model.save('heart_disease.keras')
 dump(labelencoder_gender, 'heart_disease_label.pkl')
 dump(ct, 'heart_disease_column_transformers.pkl')
-dump(sc,'heart_disease_standard_scaler.pkl')
-الشرح
+dump(sc, 'heart_disease_standard_scaler.pkl')
+🧪 التنبؤ بحالة مريض جديد
+تحميل الـ encoders والنموذج وتحويل البيانات الجديدة والتنبؤ بالحالة.
 
-حفظ النموذج والـ Encoders بحيث يمكن استخدامهم لاحقًا مع بيانات جديدة.
-
-🧪 10. التنبؤ بحالة مريض جديد
 python
 نسخ
 تحرير
-new_patient = pd.DataFrame(...)
-new_patient = labelencoder_gender.transform(...)
-new_patient = ct_loaded.transform(new_patient)
-new_patient = sc_loaded.transform(new_patient)
-prediction = model.predict(new_patient)
-الشرح
+import pandas as pd
+from keras.models import load_model
+from joblib import load
 
-نقوم بتمرير بيانات مريض جديد.
+model = load_model('heart_disease.keras')
+labelencoder_gender = load('heart_disease_label.pkl')
+ct_loaded = load('heart_disease_column_transformers.pkl')
+sc_loaded = load('heart_disease_standard_scaler.pkl')
 
-نطبق نفس الخطوات (Encoding + Scaling).
+new_patient = pd.DataFrame([...], columns=...)
 
-نحصل على النتيجة: هل المريض مصاب أم ل
+new_patient['sex'] = labelencoder_gender.transform(new_patient['sex'])
+new_patient_encoded = ct_loaded.transform(new_patient)
+new_patient_scaled = sc_loaded.transform(new_patient_encoded)
+
+prediction = model.predict(new_patient_scaled)
+print(prediction)
