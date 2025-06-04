@@ -104,7 +104,7 @@ plt.title('Training MAE')
 
 ---
 
-## ✅ المتطلبات
+##  المتطلبات
 
 ```bash
 pip install tensorflow matplotlib numpy
